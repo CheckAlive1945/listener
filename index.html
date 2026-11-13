@@ -80,10 +80,15 @@ function build(){
   };
 }
 function start(){
-  finalText=out.value;on=true;ui(true);st.textContent='Listening…';
+  finalText=out.value;on=true;ui(true);st.textContent='Listening… the screen will stay on.';lock();
   try{build();rec.start()}catch(e){on=false;ui(false);st.textContent='Could not start the microphone.'}
 }
-function stop(){on=false;ui(false);st.textContent='Stopped.';try{rec&&rec.stop()}catch(e){}out.value=finalText}
+function stop(){on=false;ui(false);st.textContent='Stopped.';unlock();try{rec&&rec.stop()}catch(e){}out.value=finalText}
+
+let wl=null;
+async function lock(){try{if('wakeLock' in navigator&&!wl){wl=await navigator.wakeLock.request('screen');wl.addEventListener('release',()=>{wl=null})}}catch(e){}}
+function unlock(){try{wl&&wl.release()}catch(e){}wl=null}
+document.addEventListener('visibilitychange',()=>{if(on&&document.visibilityState==='visible')lock()});
 
 if(!SR){go.disabled=true;st.textContent='This browser can’t do speech recognition. Open this page in Safari on your iPhone.'}
 go.addEventListener('click',()=>on?stop():start());
